@@ -27,7 +27,10 @@ class TestBuildChapterInterpretations(unittest.TestCase):
                 "interpretation": ["Alpha summary", "Beta summary"],
             }
         )
-        pd.testing.assert_frame_equal(result.reset_index(drop=True), expected)
+        pd.testing.assert_frame_equal(
+            result.reset_index(drop=True),
+            expected.reset_index(drop=True),
+        )
 
     def test_generates_fallback_interpretation(self):
         df = pd.DataFrame(
@@ -44,10 +47,14 @@ class TestBuildChapterInterpretations(unittest.TestCase):
             interpretation_column=None,
         )
 
-        self.assertEqual(result.loc[0, "chapter"], "A")
+        self.assertListEqual(result["chapter"].tolist(), ["A", "B"])
         self.assertIn("Rows: 2", result.loc[0, "interpretation"])
         self.assertIn("metric_1 avg: 15.00", result.loc[0, "interpretation"])
         self.assertIn("metric_2 avg: 3.00", result.loc[0, "interpretation"])
+        self.assertEqual(result.loc[1, "chapter"], "B")
+        self.assertIn("Rows: 1", result.loc[1, "interpretation"])
+        self.assertIn("metric_1 avg: 30.00", result.loc[1, "interpretation"])
+        self.assertIn("metric_2 avg: 8.00", result.loc[1, "interpretation"])
 
 
 if __name__ == "__main__":

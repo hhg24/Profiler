@@ -1,5 +1,6 @@
-#import xlsxwriter
 import pandas as pd
+
+MAX_SUMMARY_COLUMNS = 3
 
 
 def _build_chapter_interpretations(
@@ -12,6 +13,8 @@ def _build_chapter_interpretations(
 
     If `interpretation_column` exists, the first non-empty value is used.
     Otherwise a short data-driven summary is generated for each chapter.
+    Auto-generated summaries include row count and averages for up to
+    the first 3 numeric columns.
     """
     if chapter_column not in data.columns:
         raise ValueError(f"chapter_column '{chapter_column}' was not found in the data.")
@@ -19,8 +22,11 @@ def _build_chapter_interpretations(
     if interpretation_column and interpretation_column in data.columns:
         grouped = (
             data[[chapter_column, interpretation_column]]
+            .copy()
             .dropna(subset=[chapter_column])
-            .assign(**{interpretation_column: lambda x: x[interpretation_column].astype(str).str.strip()})
+        )
+        grouped[interpretation_column] = (
+            grouped[interpretation_column].fillna("").astype(str).str.strip()
         )
         grouped = grouped[grouped[interpretation_column] != ""]
         if not grouped.empty:
@@ -36,7 +42,7 @@ def _build_chapter_interpretations(
 
     for chapter, chapter_df in chapter_data.groupby(chapter_column, sort=False):
         summary_parts = [f"Rows: {len(chapter_df)}"]
-        for col in numeric_columns[:3]:
+        for col in numeric_columns[:MAX_SUMMARY_COLUMNS]:
             summary_parts.append(f"{col} avg: {chapter_df[col].mean():.2f}")
         rows.append(
             {
@@ -61,7 +67,7 @@ def write_to_excel(
 
     Parameters:
     data (pd.DataFrame or list of pd.DataFrame): The DataFrame(s) to write to the Excel file.
-    file_path (str): The path to save the Excel file.
+    file_name (str): Name of the output Excel file.
     sheet_names (str or list of str, optional): The name(s) of the sheet(s). If not provided, default names will be used.
 
     chapter_column (str, optional): Column name that identifies chapter sections.
