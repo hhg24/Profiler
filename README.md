@@ -68,3 +68,21 @@ uv pip compile pyproject.toml -o requirements.txt
 # to create an environment.yml file
 uv run src/utils/create_env_file.py
 ```
+
+## Chapter-based interpretations in Excel
+
+When writing a single DataFrame to Excel, you can also generate an interpretation sheet grouped by chapter:
+
+```python
+from src.write import write_to_excel
+
+write_to_excel(
+    data=df,
+    file_name="output.xlsx",
+    sheet_names="Data",
+    chapter_column="chapter",
+    interpretation_column="interpretation",
+)
+```
+
+This writes the original data to `Data` and adds an `Interpretations` sheet with one row per chapter.
